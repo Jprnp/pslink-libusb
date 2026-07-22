@@ -11,6 +11,8 @@ A tiny Windows companion for the **Sony PlayStation Pulse Elite** wireless heads
 > Not affiliated with, endorsed by, or supported by Sony. Use at your own risk.
 > "Pulse Elite Companion" is the friendly name; `pslink-libusb` is the technical/repo name.
 
+<p align="center"><img src="docs/panel.png" alt="Pulse Elite Companion settings panel — battery, volume, mic, sidetone and EQ" width="360"></p>
+
 ---
 
 ## The problem
