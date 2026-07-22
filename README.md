@@ -52,6 +52,24 @@ user space:
 The in-box USB **audio** driver (`usbaudio` on MI_00) is left completely untouched — sound keeps
 working normally.
 
+## How it was built
+
+Everything here was reverse-engineered from the real device — there is no vendor documentation.
+The methodology, kept deliberately empirical:
+
+- **Live USB bus captures** (USBPcap + Wireshark) of the official app talking to the dongle, to see
+  exactly what crosses the wire. This is how the freeze cause (the babble on interrupt endpoint `0x81`)
+  and the ~5 Hz EP0 keepalive poll that maintains presence were found.
+- **HID / WinUSB probing from user space** (Python + pyusb/libusb): read the vendor feature reports and
+  replay candidate commands while watching the device's own state bytes change. Sidetone, EQ, volume and
+  mic-mute were each confirmed byte-for-byte this way; the battery level was decoded by reading report
+  `0x82` and calibrating it against the percentage the official app displays.
+- **A Python prototype validated every step on real hardware first** (freeze eliminated, presence held,
+  read + write), and only then was the logic ported to the C#/.NET tray app. Those prototype tools stay
+  in the repo so anyone can reproduce the findings.
+
+The guiding rule throughout: prove each claim against the live device instead of assuming it.
+
 ## Status
 
 | Piece | State |

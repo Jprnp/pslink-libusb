@@ -3,15 +3,8 @@ using System.Drawing;
 namespace PulseElite;
 
 /// <summary>
-/// Janela dedicada do app (abre ao clicar no ícone da tray). Sliders de sidetone e
-/// volume, EQ, mute do mic, bateria e status ao vivo. Fecha escondendo (fica na tray).
-///
-/// Estado dos controles:
-///   - Sidetone (slider)  : FUNCIONA (SetFeature 0xD0 máscara 0x40, validado).
-///   - EQ (presets)       : FUNCIONA (0xD0 máscara 0x04).
-///   - Volume (slider)    : desabilitado até a sondagem device-side (probe_volume_mic.py).
-///   - Mic mute (toggle)  : desabilitado até a sondagem.
-///   - Bateria            : desabilitado até decodificar o report 0x82.
+/// Janela dedicada do app (abre ao clicar no ícone da tray). Bateria no topo, depois
+/// volume, mic, sidetone e EQ. Fecha escondendo (fica na tray).
 /// </summary>
 public sealed class SettingsForm : Form
 {
@@ -20,17 +13,24 @@ public sealed class SettingsForm : Form
 
     private readonly Label _statusDot = new();
     private readonly Label _statusText = new();
+    private readonly ProgressBar _battery = new();
+    private readonly Label _batteryVal = new();
     private readonly TrackBar _volume = new();
     private readonly Label _volumeVal = new();
     private readonly CheckBox _mic = new();
     private readonly TrackBar _sidetone = new();
     private readonly Label _sidetoneVal = new();
     private readonly ComboBox _eq = new();
-    private readonly ProgressBar _battery = new();
-    private readonly Label _batteryVal = new();
 
     private bool _userDraggingVolume;
     private bool _exiting;
+
+    // layout
+    private const int LEFT = 20;
+    private const int CONTENT_W = 300;
+    private const int VAL_X = LEFT + CONTENT_W + 8;
+    private const int VAL_W = 66;
+    private static readonly Color Accent = Color.FromArgb(114, 137, 218);
 
     public SettingsForm(WinUsbDevice dev)
     {
@@ -40,7 +40,7 @@ public sealed class SettingsForm : Form
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(360, 340);
+        ClientSize = new Size(VAL_X + VAL_W + LEFT, 356);
         BackColor = Color.FromArgb(32, 34, 37);
         ForeColor = Color.Gainsboro;
         Font = new Font("Segoe UI", 9f);
@@ -54,83 +54,89 @@ public sealed class SettingsForm : Form
 
     private void BuildLayout()
     {
-        int y = 14;
-
-        // --- status ---
-        _statusDot.SetBounds(16, y, 14, 14);
-        _statusDot.Text = "●"; // bolinha
-        _statusText.SetBounds(34, y - 2, 300, 20);
+        // --- status (topo) ---
+        _statusDot.AutoSize = false;
+        _statusDot.SetBounds(LEFT, 16, 14, 16);
+        _statusDot.Font = new Font("Segoe UI", 11f);
+        _statusDot.Text = "●";
+        _statusText.SetBounds(LEFT + 18, 16, 260, 20);
         _statusText.Text = "…";
-        Controls.Add(_statusDot); Controls.Add(_statusText);
-        y += 34;
+        Controls.Add(_statusDot);
+        Controls.Add(_statusText);
+
+        // --- bateria (logo abaixo do status, conforme pedido) ---
+        SectionLabel("Bateria", 48);
+        _battery.SetBounds(LEFT, 70, CONTENT_W, 16);
+        _battery.Minimum = 0; _battery.Maximum = 100;
+        ValueLabel(_batteryVal, 68, "—");
+        Controls.Add(_battery);
 
         // --- volume ---
-        AddSectionLabel("Volume do headset", y); y += 22;
-        _volume.SetBounds(16, y, 250, 40);
-        _volume.Minimum = WinUsbDevice.VolMin; _volume.Maximum = WinUsbDevice.VolMax;
-        _volume.TickFrequency = 1;
+        SectionLabel("Volume do headset", 100);
+        Slider(_volume, WinUsbDevice.VolMin, WinUsbDevice.VolMax, 122);
         _volume.MouseDown += (_, _) => _userDraggingVolume = true;
         _volume.MouseUp += (_, _) => _userDraggingVolume = false;
         _volume.Scroll += (_, _) => { _dev.SetVolume(_volume.Value); _volumeVal.Text = $"{_volume.Value}/15"; };
-        _volumeVal.SetBounds(276, y + 8, 70, 20);
-        Controls.Add(_volume); Controls.Add(_volumeVal);
-        y += 44;
+        ValueLabel(_volumeVal, 126, "—");
 
         // --- mic ---
-        _mic.SetBounds(16, y, 300, 22);
+        _mic.SetBounds(LEFT, 166, CONTENT_W, 24);
         _mic.Text = "Microfone ativo";
-        // Click só dispara por interação do usuário (o timer mexe em .Checked sem disparar Click),
-        // então não há loop de feedback. Ao clicar, .Checked já reflete o novo estado.
+        // Click só dispara por interação do usuário (o timer mexe em .Checked sem disparar Click).
         _mic.Click += (_, _) => _dev.SetMicMuted(!_mic.Checked);
         Controls.Add(_mic);
-        y += 32;
 
-        // --- sidetone (FUNCIONA) ---
-        AddSectionLabel("Sidetone (retorno do mic)", y); y += 22;
-        _sidetone.SetBounds(16, y, 250, 40);
-        _sidetone.Minimum = WinUsbDevice.SidetoneMin; _sidetone.Maximum = WinUsbDevice.SidetoneMax;
-        _sidetone.TickFrequency = 1;
+        // --- sidetone ---
+        SectionLabel("Sidetone (retorno do mic)", 200);
+        Slider(_sidetone, WinUsbDevice.SidetoneMin, WinUsbDevice.SidetoneMax, 222);
         _sidetone.Scroll += (_, _) =>
         {
             _dev.SetSidetone(_sidetone.Value);
             _sidetoneVal.Text = _sidetone.Value == 0 ? "off" : _sidetone.Value.ToString();
         };
-        _sidetoneVal.SetBounds(276, y + 8, 70, 20);
-        _sidetoneVal.Text = "off";
-        Controls.Add(_sidetone); Controls.Add(_sidetoneVal);
-        y += 44;
+        ValueLabel(_sidetoneVal, 226, "off");
 
-        // --- EQ (FUNCIONA) ---
-        AddSectionLabel("Equalizador", y); y += 22;
-        _eq.SetBounds(16, y, 160, 24);
+        // --- EQ ---
+        SectionLabel("Equalizador", 268);
+        _eq.SetBounds(LEFT, 290, 180, 24);
         _eq.DropDownStyle = ComboBoxStyle.DropDownList;
+        _eq.FlatStyle = FlatStyle.Flat;
         _eq.Items.AddRange(new object[] { "Preset 1", "Preset 2", "Preset 3" });
         _eq.SelectedIndexChanged += (_, _) =>
         {
             if (_eq.SelectedIndex >= 0) _dev.SetEq(WinUsbDevice.EqPresets[_eq.SelectedIndex]);
         };
         Controls.Add(_eq);
-        y += 34;
-
-        // --- bateria (placeholder) ---
-        AddSectionLabel("Bateria", y); y += 22;
-        _battery.SetBounds(16, y, 250, 16);
-        _battery.Minimum = 0; _battery.Maximum = 100;
-        _batteryVal.SetBounds(276, y - 2, 70, 20);
-        _batteryVal.Text = "—";
-        Controls.Add(_battery); Controls.Add(_batteryVal);
     }
 
-    private void AddSectionLabel(string text, int y)
+    private void SectionLabel(string text, int y)
     {
         var l = new Label
         {
             Text = text,
-            ForeColor = Color.FromArgb(114, 137, 218),
+            ForeColor = Accent,
             Font = new Font("Segoe UI", 8.25f, FontStyle.Bold),
+            AutoSize = false,
         };
-        l.SetBounds(16, y, 320, 16);
+        l.SetBounds(LEFT, y, CONTENT_W, 16);
         Controls.Add(l);
+    }
+
+    private void ValueLabel(Label lbl, int y, string init)
+    {
+        lbl.SetBounds(VAL_X, y, VAL_W, 20);
+        lbl.TextAlign = ContentAlignment.MiddleLeft;
+        lbl.Text = init;
+        Controls.Add(lbl);
+    }
+
+    private void Slider(TrackBar tb, int min, int max, int y)
+    {
+        tb.AutoSize = false;
+        tb.SetBounds(LEFT - 4, y, CONTENT_W, 34);
+        tb.Minimum = min; tb.Maximum = max;
+        tb.TickStyle = TickStyle.None;
+        Controls.Add(tb);
     }
 
     private void RefreshFromState()

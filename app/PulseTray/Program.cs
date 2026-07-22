@@ -6,10 +6,10 @@ namespace PulseElite;
 static class Program
 {
     [STAThread]
-    static void Main()
+    static void Main(string[] args)
     {
         ApplicationConfiguration.Initialize();
-        using var app = new TrayApp();
+        using var app = new TrayApp(args.Contains("--panel"));
         Application.Run();
     }
 }
@@ -28,7 +28,7 @@ sealed class TrayApp : IDisposable
     private int _sidetone;          // último nível setado (não há read-back)
     private int _eqIndex;           // último preset setado
 
-    public TrayApp()
+    public TrayApp(bool openPanel = false)
     {
         _iconOn = LoadIcon("icon.ico");       // colorido = conectado
         _iconOff = LoadIcon("icon_off.ico");  // cinza = sem device
@@ -50,6 +50,8 @@ sealed class TrayApp : IDisposable
         _uiTimer.Start();
 
         _dev.Start();
+
+        if (openPanel) _form.ShowPanel();
     }
 
     // ---------------- menu ----------------
