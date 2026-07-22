@@ -13,12 +13,11 @@
   no Zadig) + full uninstaller.
 - Custom app / tray icon (color = connected, grey = disconnected).
 - Autostart toggle ("start with Windows").
+- **Mic mute from the app** (device-side, `SET_REPORT(0xD0)` mask `0x01`, byte[2] 1/0).
+- **Battery indicator** — feature report `0x82`, byte[3] on a 0–15 scale → percentage.
 
 ## To do
 - **i18n** — English by default, with optional **Portuguese** and **Spanish**.
-- **Mic mute from the app** (host→device) — probe the command (mask `0x02` is volume; mute is a
-  different one), or fall back to Windows software mute on the capture endpoint.
-- **Battery indicator** — decode feature report `0x82`.
 - **Connection state in the UI** — find the byte that reflects link status (not in bytes 39/43/44).
 - **Idle auto-off (evaluate feasibility)** — a configurable polling timeout: after N minutes with
   no audio being played (e.g. 5), stop the keepalive so the headset powers itself off for lack of

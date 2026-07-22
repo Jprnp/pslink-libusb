@@ -79,8 +79,9 @@ public sealed class SettingsForm : Form
         // --- mic ---
         _mic.SetBounds(16, y, 300, 22);
         _mic.Text = "Microfone ativo";
-        _mic.Enabled = false; // até a sondagem
-        // _mic.CheckedChanged += (_, _) => _dev.SetMicMuted(!_mic.Checked);  // pós-sondagem
+        // Click só dispara por interação do usuário (o timer mexe em .Checked sem disparar Click),
+        // então não há loop de feedback. Ao clicar, .Checked já reflete o novo estado.
+        _mic.Click += (_, _) => _dev.SetMicMuted(!_mic.Checked);
         Controls.Add(_mic);
         y += 32;
 
@@ -114,7 +115,7 @@ public sealed class SettingsForm : Form
         // --- bateria (placeholder) ---
         AddSectionLabel("Bateria", y); y += 22;
         _battery.SetBounds(16, y, 250, 16);
-        _battery.Minimum = 0; _battery.Maximum = 100; _battery.Enabled = false;
+        _battery.Minimum = 0; _battery.Maximum = 100;
         _batteryVal.SetBounds(276, y - 2, 70, 20);
         _batteryVal.Text = "—";
         Controls.Add(_battery); Controls.Add(_batteryVal);
@@ -149,6 +150,10 @@ public sealed class SettingsForm : Form
         {
             _volumeVal.Text = "—";
         }
+
+        int bat = _dev.BatteryPercent;
+        if (bat >= 0) { _battery.Value = bat; _batteryVal.Text = $"{bat}%"; }
+        else { _batteryVal.Text = "—"; }
     }
 
     public void ShowPanel()

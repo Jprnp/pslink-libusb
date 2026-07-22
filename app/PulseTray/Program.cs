@@ -133,7 +133,9 @@ sealed class TrayApp : IDisposable
         var st = _dev.State;
         if (!st.Connected) return "Pulse Elite — desconectado";
         string mic = st.MicMuted ? "mudo" : "ativo";
-        return $"Pulse Elite • Volume {st.Volume}/15 • Mic {mic}";
+        int bat = _dev.BatteryPercent;
+        string batTxt = bat >= 0 ? $" • Bat {bat}%" : "";
+        return $"Pulse Elite • Vol {st.Volume}/15 • Mic {mic}{batTxt}";
     }
 
     private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max];

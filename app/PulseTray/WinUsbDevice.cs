@@ -47,6 +47,7 @@ public sealed class WinUsbDevice : IDisposable
 
     public PulseState State { get; private set; } = PulseState.Disconnected;
     public bool Connected => State.Connected;
+    public int BatteryPercent { get; private set; } = -1;   // -1 = desconhecido; via report 0x82 (byte3/15)
 
     /// <summary>Disparado quando o estado LÓGICO muda (vol/mic/botão) ou a presença sobe/cai.</summary>
     public event Action<PulseState>? Changed;
@@ -265,15 +266,25 @@ public sealed class WinUsbDevice : IDisposable
         return TrySetReport(b);
     }
 
+    /// <summary>
+    /// Mute do microfone device-side. Descoberto por captura do app da Sony (2026-07-22):
+    /// SET_REPORT 0xD0 máscara 0x01, byte[2] = 1 (mutar) / 0 (desmutar).
+    /// </summary>
+    public bool SetMicMuted(bool muted)
+    {
+        var b = new byte[22]; b[0] = 0xD0; b[1] = 0x01; b[2] = (byte)(muted ? 1 : 0);
+        return TrySetReport(b);
+    }
+
     // ---------------- loop de keepalive ----------------
     private void RunLoop()
     {
-        int fails = 0;
+        int fails = 0, battTick = 0;
         while (_running)
         {
             if (_winusb == IntPtr.Zero)
             {
-                if (!OpenDevice()) { UpdateState(PulseState.Disconnected); Thread.Sleep(500); continue; }
+                if (!OpenDevice()) { UpdateState(PulseState.Disconnected); BatteryPercent = -1; Thread.Sleep(500); continue; }
                 fails = 0;
             }
             if (TryGetReport(0xB0, out byte[] raw))
@@ -285,7 +296,15 @@ public sealed class WinUsbDevice : IDisposable
             {
                 CloseDevice();
                 UpdateState(PulseState.Disconnected);
+                BatteryPercent = -1;
                 fails = 0;
+            }
+            // bateria: report 0x82, byte[3] numa escala 0-15 (a cada ~4 s, não é urgente)
+            if (--battTick <= 0)
+            {
+                battTick = 20;
+                if (TryGetReport(0x82, out byte[] b82))
+                    BatteryPercent = Math.Clamp((int)Math.Round(b82[3] / 15.0 * 100), 0, 100);
             }
             Thread.Sleep(PollIntervalMs);
         }
@@ -316,7 +335,7 @@ public readonly struct PulseState
         Connected = true;
         byte b = raw[39];
         Volume = raw[44];
-        MicMuted = raw[43] == 0x0C;
+        MicMuted = (raw[43] & 0xF0) == 0x00;  // 0xF*=ativo, 0x0*=mudo (nibble alto)
         VolUp = (b & 0x08) != 0;
         VolDown = (b & 0x10) != 0;
         MuteBtn = (b & 0x20) != 0;
