@@ -1,0 +1,42 @@
+; PulseElite.inf
+; Binds the PlayStation Link dongle control interface (MI_03) to WinUSB, so the
+; Pulse Elite Companion app can talk to it over EP0 without opening the interrupt
+; pipe (0x81) -- which is what eliminates the audio-freeze babble. Configures the
+; in-box, Microsoft-signed winusb.sys; installs no new kernel binary.
+;
+; Applies to ANY PS Link dongle: matches by VID/PID/MI_03 (constant across units).
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = USBDevice
+ClassGuid   = {88BAE032-5A81-49F0-BC3D-A4FF138216D6}
+Provider    = %ProviderName%
+CatalogFile = PulseElite.cat
+DriverVer   = 07/22/2026,1.0.0.0
+PnpLockdown = 1
+
+[Manufacturer]
+%ProviderName% = Standard,NTamd64
+
+[Standard.NTamd64]
+%DeviceName% = USB_Install, USB\VID_054C&PID_0ECC&MI_03
+
+; ------------------------------------------------------------------------------
+[USB_Install]
+Include = winusb.inf
+Needs   = WINUSB.NT
+
+[USB_Install.Services]
+Include = winusb.inf
+Needs   = WINUSB.NT.Services
+
+[USB_Install.HW]
+AddReg = Dev_AddReg
+
+; GUID de interface FIXO do app (mesmo em toda máquina/dongle).
+[Dev_AddReg]
+HKR,,DeviceInterfaceGUIDs,0x10000,"{E5B7A2D4-3C61-4F8B-9A2E-7D1C6F80B4A3}"
+
+[Strings]
+ProviderName = "Pulse Elite Companion"
+DeviceName   = "PlayStation Link Control (WinUSB)"

@@ -21,9 +21,10 @@ public sealed class WinUsbDevice : IDisposable
     // Identidade do device: constante pra TODOS os dongles PS Link (qualquer unidade, qualquer PC).
     private const string HardwareIdMatch = "VID_054C&PID_0ECC";
     private const string InterfaceMatch = "MI_03";
-    // GUID de interface só como FALLBACK (Zadig gerou este no protótipo). O caminho normal
-    // descobre o GUID em runtime lendo o registro do próprio device -> funciona com qualquer bind.
-    private static readonly Guid FallbackGuid = new("FAA2A598-BF57-4163-A09E-7FCE3EB0FC21");
+    // GUID de interface canônico do nosso INF (app/driver/PulseElite.inf) — igual em toda máquina
+    // que instalar via install.ps1. Só é usado como FALLBACK: o caminho normal descobre o GUID
+    // em runtime lendo o registro do device, então funciona também com bind via Zadig (GUID aleatório).
+    private static readonly Guid FallbackGuid = new("E5B7A2D4-3C61-4F8B-9A2E-7D1C6F80B4A3");
 
     // HID-over-control (bytes validados na captura; HANDOFF §3-5, §8.4)
     private const byte GetBmReq = 0xA1, GetReq = 0x01;   // class/interface IN  -> GET_REPORT

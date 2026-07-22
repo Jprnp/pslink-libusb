@@ -74,24 +74,52 @@ working normally.
   interrupt pipe. `read_state.py`, `test_write.py`, `probe_volume_mic.py`, `probe_volume_map.py`,
   `app/pulse_device.py` — prototype/repro tools (pyusb + libusb) that validate the mechanism.
 
-## Try it (prototype)
+## Install
 
-Requires Windows, a PS Link dongle, and [Zadig](https://zadig.akeo.ie).
+Requires Windows x64 and a PS Link dongle.
 
-1. **Rebind MI_03 to WinUSB** with Zadig: *Options → List All Devices*, pick
-   **"PlayStation Link Adapter (Interface 3)"** (current driver **HidUsb** — **not** the
-   `USBAudio` one, which is the audio interface), target **WinUSB**, *Replace Driver*.
-   Reversible in Device Manager (uninstall device → scan for hardware changes).
-2. Build the app (needs the .NET SDK):
-   ```
-   dotnet build app/PulseTray/PulseTray.csproj -c Debug
-   ```
-   Or verify the mechanism first with the Python tools:
-   ```
-   pip install pyusb libusb-package
-   py read_state.py --watch      # live button/volume readout
-   py winusb_proto.py            # 5 Hz keepalive + sidetone/EQ
-   ```
+### 1. Bind the dongle's control interface (MI_03) to WinUSB
+
+Right-click `app/driver/install.ps1` → **Run with PowerShell** (or run it from a terminal):
+
+```
+powershell -ExecutionPolicy Bypass -File app\driver\install.ps1
+```
+
+It self-elevates (one UAC prompt) and, using only built-in Windows tools, installs the WinUSB
+driver on **MI_03** with a fixed interface GUID. The USB **audio** interface (MI_00) is left
+untouched — sound keeps working. To reverse everything, run `app/driver/uninstall.ps1`.
+
+> ⚠️ **About the self-signed certificate — please read.**
+> Windows x64 refuses to install an *unsigned* driver package. Since this is a hobby/community
+> tool without a paid Microsoft-attestation signature, the installer **generates a self-signed
+> code-signing certificate and adds it to your machine's Trusted Root and Trusted Publisher
+> certificate stores** in order to sign and install our INF. This is the *same* trust concession
+> the popular **Zadig** utility makes under the hood. Nothing is uploaded and no external service
+> is involved — but a certificate that you generated locally becomes trusted by your machine.
+> `app/driver/uninstall.ps1` removes the driver, reverts MI_03 to the in-box HID driver, **and
+> deletes that certificate** from all three stores. A proper Microsoft-signed driver (no
+> certificate step) is planned for a public release.
+
+*Alternative (no installer):* bind MI_03 to WinUSB manually with [Zadig](https://zadig.akeo.ie)
+(*Options → List All Devices* → "PlayStation Link … (Interface 3)", currently on **HidUsb** —
+not the `USBAudio` one — target **WinUSB** → *Replace Driver*). The app auto-detects whichever
+WinUSB binding is present, so either method works.
+
+### 2. Run the app
+
+```
+dotnet build app/PulseTray/PulseTray.csproj -c Debug
+```
+Launch `PulseElite.exe`; it lives in the system tray (green = connected). Left-click for the
+settings panel; right-click for the quick menu. Enable **"Iniciar com o Windows"** for autostart.
+
+*To verify the underlying mechanism without the app*, use the Python tools:
+```
+pip install pyusb libusb-package
+py read_state.py --watch      # live button/volume readout
+py winusb_proto.py            # 5 Hz keepalive + sidetone/EQ
+```
 
 ## License
 

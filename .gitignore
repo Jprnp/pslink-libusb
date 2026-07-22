@@ -9,6 +9,10 @@ __pycache__/
 # --- logs / outputs ---
 *.log
 
+# --- artefatos de assinatura gerados por máquina (cada usuário gera os seus) ---
+*.cat
+*.cer
+
 # --- large / transient artifacts (kept local, not in repo) ---
 *.wav
 raw/usbtreeview/
