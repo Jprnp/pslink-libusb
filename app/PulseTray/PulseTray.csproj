@@ -10,7 +10,13 @@
     <RootNamespace>PulseElite</RootNamespace>
     <Version>0.1.0</Version>
     <Product>Pulse Elite Companion</Product>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="icon.ico" />
+    <EmbeddedResource Include="icon_off.ico" />
+  </ItemGroup>
 
   <!-- publish self-contained single-file: dotnet publish -c Release -r win-x64 -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

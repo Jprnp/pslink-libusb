@@ -30,10 +30,10 @@ sealed class TrayApp : IDisposable
 
     public TrayApp()
     {
-        _iconOn = MakeDotIcon(Color.FromArgb(46, 204, 113));   // verde = conectado
-        _iconOff = MakeDotIcon(Color.FromArgb(127, 140, 141)); // cinza = sem device
+        _iconOn = LoadIcon("icon.ico");       // colorido = conectado
+        _iconOff = LoadIcon("icon_off.ico");  // cinza = sem device
 
-        _form = new SettingsForm(_dev);
+        _form = new SettingsForm(_dev) { Icon = _iconOn };
 
         _tray = new NotifyIcon
         {
@@ -153,19 +153,13 @@ sealed class TrayApp : IDisposable
         else k.DeleteValue(RunValue, throwOnMissingValue: false);
     }
 
-    // ---------------- ícone desenhado ----------------
-    private static Icon MakeDotIcon(Color color)
+    // ---------------- ícone (recurso .ico embutido) ----------------
+    private static Icon LoadIcon(string name)
     {
-        using var bmp = new Bitmap(16, 16);
-        using (var g = Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.Clear(Color.Transparent);
-            using var brush = new SolidBrush(color);
-            g.FillEllipse(brush, 2, 2, 12, 12);
-        }
-        IntPtr h = bmp.GetHicon();
-        return (Icon)Icon.FromHandle(h).Clone(); // clone p/ possuir o handle com segurança
+        using var s = System.Reflection.Assembly.GetExecutingAssembly()
+            .GetManifestResourceStream("PulseElite." + name)
+            ?? throw new InvalidOperationException("recurso de ícone não encontrado: " + name);
+        return new Icon(s);
     }
 
     public void Dispose()
