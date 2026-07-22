@@ -20,6 +20,11 @@
   different one), or fall back to Windows software mute on the capture endpoint.
 - **Battery indicator** — decode feature report `0x82`.
 - **Connection state in the UI** — find the byte that reflects link status (not in bytes 39/43/44).
+- **Idle auto-off (evaluate feasibility)** — a configurable polling timeout: after N minutes with
+  no audio being played (e.g. 5), stop the keepalive so the headset powers itself off for lack of
+  heartbeat, saving its battery. Detecting "no audio in use" would require reading render-endpoint
+  activity via Core Audio (`IAudioMeterInformation`, read-only) — to be weighed against keeping the
+  app WinUSB-only.
 - **Packaging** — single-file self-contained `dotnet publish`; optionally one installer that
   bundles driver + app + autostart.
 - **Properly signed driver** — Microsoft attestation signing to remove the self-signed-certificate
