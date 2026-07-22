@@ -13,6 +13,9 @@ __pycache__/
 *.cat
 *.cer
 
+# --- bundle de release (gerado por build-release.ps1) ---
+release/
+
 # --- large / transient artifacts (kept local, not in repo) ---
 *.wav
 raw/usbtreeview/

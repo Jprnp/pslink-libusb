@@ -27,7 +27,7 @@ function Test-Admin {
 
 if (-not (Test-Admin)) {
     Write-Host "Elevando (UAC)..."
-    Start-Process powershell -Verb RunAs -ArgumentList `
+    Start-Process powershell -Verb RunAs -Wait -ArgumentList `
         "-NoProfile","-ExecutionPolicy","Bypass","-File","`"$($MyInvocation.MyCommand.Path)`"","-Elevated"
     return
 }

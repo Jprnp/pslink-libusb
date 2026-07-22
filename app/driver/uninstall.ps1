@@ -11,7 +11,7 @@ function Test-Admin {
     ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 if (-not (Test-Admin)) {
-    Start-Process powershell -Verb RunAs -ArgumentList `
+    Start-Process powershell -Verb RunAs -Wait -ArgumentList `
         "-NoProfile","-ExecutionPolicy","Bypass","-File","`"$($MyInvocation.MyCommand.Path)`"","-Elevated"
     return
 }

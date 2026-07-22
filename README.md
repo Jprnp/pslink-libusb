@@ -96,7 +96,20 @@ The guiding rule throughout: prove each claim against the live device instead of
 
 Requires Windows x64 and a PS Link dongle.
 
-### 1. Bind the dongle's control interface (MI_03) to WinUSB
+### Easy install (release bundle)
+
+Download the release bundle, unzip it, and run **`setup.ps1`** (right-click → *Run with
+PowerShell*). It installs the WinUSB driver (one UAC prompt — see the certificate note below),
+copies the app to `%LOCALAPPDATA%\PulseEliteCompanion`, enables start-with-Windows, and launches it.
+
+Maintainers build the bundle with `build-release.ps1` (publishes a self-contained, single-file,
+compressed exe and zips it with `setup.ps1` + the driver files).
+
+### Manual install (from source)
+
+Requires the .NET SDK.
+
+#### 1. Bind the dongle's control interface (MI_03) to WinUSB
 
 Right-click `app/driver/install.ps1` → **Run with PowerShell** (or run it from a terminal):
 
@@ -124,7 +137,7 @@ untouched — sound keeps working. To reverse everything, run `app/driver/uninst
 not the `USBAudio` one — target **WinUSB** → *Replace Driver*). The app auto-detects whichever
 WinUSB binding is present, so either method works.
 
-### 2. Run the app
+#### 2. Run the app
 
 ```
 dotnet build app/PulseTray/PulseTray.csproj -c Debug

@@ -18,13 +18,14 @@
 - **Battery indicator** — feature report `0x82`, byte[3] on a 0–15 scale → percentage.
 - **Connection state in the UI** — real headset link from `0xB0` byte 39 bit0 (Connected / Disconnected).
 
+- **Packaging** — self-contained single-file build (`build-release.ps1`) + one-shot `setup.ps1`
+  (driver + app + autostart).
+
 ## To do
 - **Idle auto-off (evaluate feasibility)** — a configurable polling timeout: after N minutes with
   no audio being played (e.g. 5), stop the keepalive so the headset powers itself off for lack of
   heartbeat, saving its battery. Detecting "no audio in use" would require reading render-endpoint
   activity via Core Audio (`IAudioMeterInformation`, read-only) — to be weighed against keeping the
   app WinUSB-only.
-- **Packaging** — single-file self-contained `dotnet publish`; optionally one installer that
-  bundles driver + app + autostart.
 - **Properly signed driver** — Microsoft attestation signing to remove the self-signed-certificate
   step from the installer.
