@@ -158,8 +158,8 @@ public sealed class SettingsForm : Form
         }
 
         int bat = _dev.BatteryPercent;
-        if (bat >= 0) { _battery.Value = bat; _batteryVal.Text = $"{bat}%"; }
-        else { _batteryVal.Text = "—"; }
+        if (st.Connected && bat >= 0) { _battery.Value = bat; _batteryVal.Text = $"{bat}%"; }
+        else { _battery.Value = 0; _batteryVal.Text = "—"; }
     }
 
     public void ShowPanel()

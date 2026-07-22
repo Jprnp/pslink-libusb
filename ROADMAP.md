@@ -16,9 +16,9 @@
 - **i18n** — English by default, with runtime-switchable Portuguese and Spanish.
 - **Mic mute from the app** (device-side, `SET_REPORT(0xD0)` mask `0x01`, byte[2] 1/0).
 - **Battery indicator** — feature report `0x82`, byte[3] on a 0–15 scale → percentage.
+- **Connection state in the UI** — real headset link from `0xB0` byte 39 bit0 (Connected / Disconnected).
 
 ## To do
-- **Connection state in the UI** — find the byte that reflects link status (not in bytes 39/43/44).
 - **Idle auto-off (evaluate feasibility)** — a configurable polling timeout: after N minutes with
   no audio being played (e.g. 5), stop the keepalive so the headset powers itself off for lack of
   heartbeat, saving its battery. Detecting "no audio in use" would require reading render-endpoint

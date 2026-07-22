@@ -332,8 +332,10 @@ public readonly struct PulseState
 
     private PulseState(byte[] raw)
     {
-        Connected = true;
         byte b = raw[39];
+        // bit0 do byte39 = headset linkado/ligado (achado 2026-07-22: 0x01 ligado, 0x00 desligado).
+        // O dongle responde ao poll mesmo com o headset off, então este bit é o link real.
+        Connected = (b & 0x01) != 0;
         Volume = raw[44];
         MicMuted = (raw[43] & 0xF0) == 0x00;  // 0xF*=ativo, 0x0*=mudo (nibble alto)
         VolUp = (b & 0x08) != 0;
