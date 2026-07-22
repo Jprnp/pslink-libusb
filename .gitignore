@@ -1,0 +1,43 @@
+# --- .NET build output ---
+app/**/bin/
+app/**/obj/
+
+# --- Python ---
+__pycache__/
+*.pyc
+
+# --- logs / outputs ---
+*.log
+
+# --- large / transient artifacts (kept local, not in repo) ---
+*.wav
+raw/usbtreeview/
+raw/usbtreeview.zip
+raw/STOP_CAPTURE
+
+# --- one-off local tool que contém o serial em texto (não versionar) ---
+scrub_serial.py
+
+# --- material pessoal de investigação (fica local, NÃO vai pro repo do app) ---
+HANDOFF-app-botoes.md
+RELATORIO-pulse-recon.md
+INVESTIGACAO-clock-drift.md
+DOSSIER-pslink-babble-EN.md
+GUIA-divulgacao.md
+raw/
+hid_enum_access.py
+audio_endpoints.py
+button_listener.py
+analyze_pcap.py
+analyze_freeze.py
+test_getfeature.py
+bus_capture_connect.ps1
+bus_capture_freeze.ps1
+bus_capture_wrapper.ps1
+disable_mi03.ps1
+glitch_monitor.ps1
+
+# --- OS/editor cruft ---
+Thumbs.db
+.DS_Store
+.vs/
