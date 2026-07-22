@@ -76,16 +76,21 @@ The guiding rule throughout: prove each claim against the live device instead of
 
 | Piece | State |
 |---|---|
-| Freeze eliminated (WinUSB, interrupt pipe never opened) | ✅ proven live |
-| Presence / keepalive via EP0 poll | ✅ proven live (150 s, auto-sync) |
-| Read volume / mic / buttons | ✅ |
-| Sidetone + EQ control | ✅ |
-| **Volume control from the app** (host→device, device-side DSP) | ✅ `SET_REPORT(0xD0)` mask `0x02` |
-| System-tray app (C#/.NET) | 🚧 in progress |
-| Dedicated settings window (sliders, battery) | 🚧 in progress |
-| Mic mute **from the app** (host→device) | 🔬 under investigation (fallback: Windows software mute) |
-| Battery indicator | 🔬 under investigation (report `0x82`) |
-| Persistent WinUSB bind via own INF (drop Zadig) | 🚧 planned |
+| Audio freeze eliminated (WinUSB, interrupt pipe never opened) | ✅ |
+| Presence / keepalive via EP0 control poll (auto-sync preserved) | ✅ |
+| Read volume / mic / buttons / connection state | ✅ |
+| Volume control from the app (device-side) | ✅ `0xD0` mask `0x02` |
+| Mic mute from the app (device-side) | ✅ `0xD0` mask `0x01` |
+| Sidetone + EQ | ✅ `0xD0` mask `0x40` / `0x04` |
+| Battery indicator | ✅ report `0x82` |
+| System-tray app + settings panel (sliders) | ✅ |
+| Portable device discovery (any machine / any dongle) | ✅ |
+| Localization — English / Português / Español | ✅ |
+| Automated installer + own WinUSB INF (no Zadig needed) | ✅ |
+| Start with Windows | ✅ |
+| Packaged release (single-file exe, one-click installer) | ✅ |
+| Idle auto-off when no audio is playing (configurable) | 🔬 evaluating |
+| Microsoft-signed driver (to drop the self-signed cert) | 🚧 planned |
 
 ## Repository layout
 
