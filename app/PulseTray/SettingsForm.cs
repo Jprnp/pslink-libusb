@@ -65,14 +65,14 @@ public sealed class SettingsForm : Form
         Controls.Add(_statusText);
 
         // --- bateria (logo abaixo do status, conforme pedido) ---
-        SectionLabel("Bateria", 48);
+        SectionLabel(Strings.T("battery"), 48);
         _battery.SetBounds(LEFT, 70, CONTENT_W, 16);
         _battery.Minimum = 0; _battery.Maximum = 100;
         ValueLabel(_batteryVal, 68, "—");
         Controls.Add(_battery);
 
         // --- volume ---
-        SectionLabel("Volume do headset", 100);
+        SectionLabel(Strings.T("volume"), 100);
         Slider(_volume, WinUsbDevice.VolMin, WinUsbDevice.VolMax, 122);
         _volume.MouseDown += (_, _) => _userDraggingVolume = true;
         _volume.MouseUp += (_, _) => _userDraggingVolume = false;
@@ -81,23 +81,23 @@ public sealed class SettingsForm : Form
 
         // --- mic ---
         _mic.SetBounds(LEFT, 166, CONTENT_W, 24);
-        _mic.Text = "Microfone ativo";
+        _mic.Text = Strings.T("mic_on");
         // Click só dispara por interação do usuário (o timer mexe em .Checked sem disparar Click).
         _mic.Click += (_, _) => _dev.SetMicMuted(!_mic.Checked);
         Controls.Add(_mic);
 
         // --- sidetone ---
-        SectionLabel("Sidetone (retorno do mic)", 200);
+        SectionLabel(Strings.T("sidetone"), 200);
         Slider(_sidetone, WinUsbDevice.SidetoneMin, WinUsbDevice.SidetoneMax, 222);
         _sidetone.Scroll += (_, _) =>
         {
             _dev.SetSidetone(_sidetone.Value);
-            _sidetoneVal.Text = _sidetone.Value == 0 ? "off" : _sidetone.Value.ToString();
+            _sidetoneVal.Text = _sidetone.Value == 0 ? Strings.T("off") : _sidetone.Value.ToString();
         };
-        ValueLabel(_sidetoneVal, 226, "off");
+        ValueLabel(_sidetoneVal, 226, Strings.T("off"));
 
         // --- EQ ---
-        SectionLabel("Equalizador", 268);
+        SectionLabel(Strings.T("equalizer"), 268);
         _eq.SetBounds(LEFT, 290, 180, 24);
         _eq.DropDownStyle = ComboBoxStyle.DropDownList;
         _eq.FlatStyle = FlatStyle.Flat;
@@ -143,13 +143,13 @@ public sealed class SettingsForm : Form
     {
         var st = _dev.State;
         _statusDot.ForeColor = st.Connected ? Color.FromArgb(46, 204, 113) : Color.FromArgb(231, 76, 60);
-        _statusText.Text = st.Connected ? "Conectado" : "Desconectado";
+        _statusText.Text = st.Connected ? Strings.T("connected") : Strings.T("disconnected");
 
         if (st.Connected)
         {
             if (!_userDraggingVolume) _volume.Value = Math.Clamp(st.Volume, _volume.Minimum, _volume.Maximum);
             _volumeVal.Text = $"{st.Volume}/15";
-            _mic.Text = st.MicMuted ? "Microfone mudo" : "Microfone ativo";
+            _mic.Text = st.MicMuted ? Strings.T("mic_muted") : Strings.T("mic_on");
             _mic.Checked = !st.MicMuted;
         }
         else

@@ -20,13 +20,10 @@ sealed class TrayApp : IDisposable
     private const string RunValue = "PulseEliteCompanion";
 
     private readonly WinUsbDevice _dev = new();
-    private readonly SettingsForm _form;
+    private SettingsForm _form;
     private readonly NotifyIcon _tray;
     private readonly System.Windows.Forms.Timer _uiTimer;
     private readonly Icon _iconOn, _iconOff;
-
-    private int _sidetone;          // último nível setado (não há read-back)
-    private int _eqIndex;           // último preset setado
 
     public TrayApp(bool openPanel = false)
     {
@@ -62,64 +59,48 @@ sealed class TrayApp : IDisposable
         var title = new ToolStripMenuItem("Pulse Elite Companion") { Enabled = false };
         var status = new ToolStripMenuItem("…") { Enabled = false, Name = "status" };
 
-        // Sidetone
-        var side = new ToolStripMenuItem("Sidetone");
-        foreach (var (label, lvl) in new (string, int)[] { ("Desligado", 0), ("Baixo", 4), ("Médio", 8), ("Alto", 12), ("Máximo", 15) })
-        {
-            var item = new ToolStripMenuItem(label) { Tag = lvl };
-            item.Click += (s, _) =>
-            {
-                int v = (int)((ToolStripMenuItem)s!).Tag!;
-                if (_dev.SetSidetone(v)) _sidetone = v;
-                MarkChecked(side, v);
-            };
-            side.DropDownItems.Add(item);
-        }
+        // Sidetone e EQ ficam só no painel dedicado (menu da tray é enxuto).
 
-        // EQ
-        var eq = new ToolStripMenuItem("Equalizador");
-        for (int i = 0; i < WinUsbDevice.EqPresets.Length; i++)
-        {
-            int idx = i;
-            var item = new ToolStripMenuItem($"Preset {i + 1}") { Tag = idx };
-            item.Click += (s, _) =>
-            {
-                if (_dev.SetEq(WinUsbDevice.EqPresets[idx])) _eqIndex = idx;
-                MarkChecked(eq, idx);
-            };
-            eq.DropDownItems.Add(item);
-        }
-
-        var autostart = new ToolStripMenuItem("Iniciar com o Windows") { CheckOnClick = true, Checked = IsAutostart() };
+        var autostart = new ToolStripMenuItem(Strings.T("autostart")) { CheckOnClick = true, Checked = IsAutostart() };
         autostart.Click += (s, _) => SetAutostart(((ToolStripMenuItem)s!).Checked);
 
-        var open = new ToolStripMenuItem("Abrir painel…");
+        var open = new ToolStripMenuItem(Strings.T("open_panel"));
         open.Click += (_, _) => _form.ShowPanel();
 
-        var exit = new ToolStripMenuItem("Sair");
+        // idioma: inglês padrão + PT/ES (troca em runtime)
+        var lang = new ToolStripMenuItem(Strings.T("language"));
+        foreach (var (name, l) in new (string, Lang)[] { ("English", Lang.En), ("Português", Lang.Pt), ("Español", Lang.Es) })
+        {
+            var li = new ToolStripMenuItem(name) { Tag = l, Checked = Strings.Current == l };
+            li.Click += (_, _) => { Strings.Set(l); RebuildUi(); };
+            lang.DropDownItems.Add(li);
+        }
+
+        var exit = new ToolStripMenuItem(Strings.T("exit"));
         exit.Click += (_, _) => { Dispose(); Application.Exit(); };
 
         menu.Items.AddRange(new ToolStripItem[]
         {
             title, status, new ToolStripSeparator(),
-            open, side, eq, new ToolStripSeparator(),
-            autostart, new ToolStripSeparator(), exit,
+            open, new ToolStripSeparator(),
+            autostart, lang, new ToolStripSeparator(), exit,
         });
 
-        // atualiza os checks/status ao abrir o menu
-        menu.Opening += (_, _) =>
-        {
-            status.Text = StatusLine();
-            MarkChecked(side, _sidetone);
-            MarkChecked(eq, _eqIndex);
-        };
+        menu.Opening += (_, _) => status.Text = StatusLine();
         return menu;
     }
 
-    private static void MarkChecked(ToolStripMenuItem parent, int tagValue)
+    // recria menu e painel após troca de idioma (as strings são lidas na construção)
+    private void RebuildUi()
     {
-        foreach (ToolStripMenuItem it in parent.DropDownItems)
-            it.Checked = it.Tag is int t && t == tagValue;
+        bool wasVisible = _form.Visible;
+        var oldMenu = _tray.ContextMenuStrip;
+        _tray.ContextMenuStrip = BuildMenu();
+        oldMenu?.Dispose();
+        _form.ForceClose();
+        _form.Dispose();
+        _form = new SettingsForm(_dev) { Icon = _iconOn };
+        if (wasVisible) _form.ShowPanel();
     }
 
     // ---------------- UI refresh ----------------
@@ -133,8 +114,8 @@ sealed class TrayApp : IDisposable
     private string StatusLine()
     {
         var st = _dev.State;
-        if (!st.Connected) return "Pulse Elite — desconectado";
-        string mic = st.MicMuted ? "mudo" : "ativo";
+        if (!st.Connected) return $"Pulse Elite — {Strings.T("tt_disc")}";
+        string mic = st.MicMuted ? Strings.T("tt_muted") : Strings.T("tt_on");
         int bat = _dev.BatteryPercent;
         string batTxt = bat >= 0 ? $" • Bat {bat}%" : "";
         return $"Pulse Elite • Vol {st.Volume}/15 • Mic {mic}{batTxt}";
