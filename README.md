@@ -17,10 +17,18 @@ A tiny Windows companion for the **Sony PlayStation Pulse Elite** wireless heads
 
 ## The problem
 
-On Windows, the PS Link dongle (`VID 054C / PID 0ECC`) periodically **freezes the audio graph**:
-`audiodg` locks up, sound cuts out, and only restarting the audio service recovers it. It happens
-passively during playback and is **accelerated** by pressing the headset's volume/mute buttons —
-in the worst case it dies within **seconds** of button mashing during exclusive-mode playback.
+On Windows, the older PS Link dongle — model **CFI-ZWA2** (`VID 054C / PID 0ECC`) — periodically
+**freezes the audio graph**: `audiodg` locks up, sound cuts out, and only restarting the audio
+service recovers it. It happens passively during playback and is **accelerated** by pressing the
+headset's volume/mute buttons — in the worst case it dies within **seconds** of button mashing
+during exclusive-mode playback.
+
+> **Which adapter needs this?** The freeze is specific to the older **CFI-ZWA2** adapter (`PID_0ECC`).
+> A newer revision, **ZFI-ZWA3** (`PID_0FA3`), does **not** exhibit the freeze in testing — if you
+> have that one, you don't need this fix. Note that both report the same firmware number
+> (`bcdDevice 1.43` / `REV_0143`), so tell them apart by **PID / model**, not by firmware version.
+> Everything here was built and validated on the **CFI-ZWA2** (`0ECC`); the ZFI-ZWA3 has a different
+> HID layout and was not reverse-engineered.
 
 ## What actually causes it
 
